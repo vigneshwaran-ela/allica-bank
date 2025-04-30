@@ -19,38 +19,52 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 class OpenApiConfigTest {
 
     /**
-     * Tests that the {@code globalHeaderCustomizer} method adds the {@code X-API-KEY}
-     * header to all HTTP operations in the OpenAPI documentation.
+     * Tests that the {@code selectiveHeaderCustomizer} method adds the {@code X-API-KEY}
+     * header only to operations under "/api/v1/customer" path.
      */
     @Test
-    void globalHeaderCustomizer_whenApplied_shouldAddApiKeyHeaderToAllOperations() {
+    void selectiveHeaderCustomizer_whenApplied_shouldAddApiKeyOnlyToCustomerPaths() {
         // Arrange
         OpenApiConfig config = new OpenApiConfig();
         OpenAPI openAPI = new OpenAPI();
 
-        Operation getOperation = new Operation();
-        Operation postOperation = new Operation();
+        // Path that should receive the header
+        Operation customerGetOp = new Operation();
+        Operation customerPostOp = new Operation();
+        PathItem customerPathItem = new PathItem()
+                .get(customerGetOp)
+                .post(customerPostOp);
 
-        PathItem pathItem = new PathItem()
-                .get(getOperation)
-                .post(postOperation);
+        // Path that should NOT receive the header
+        Operation otherGetOp = new Operation();
+        Operation otherPostOp = new Operation();
+        PathItem otherPathItem = new PathItem()
+                .get(otherGetOp)
+                .post(otherPostOp);
 
         Paths paths = new Paths();
-        paths.addPathItem("/test", pathItem);
+        paths.addPathItem("/api/v1/customer", customerPathItem);
+        paths.addPathItem("/api/v1/admin", otherPathItem);
         openAPI.setPaths(paths);
 
         // Act
-        config.globalHeaderCustomizer().customise(openAPI);
+        config.selectiveHeaderCustomizer().customise(openAPI);
 
-        // Assert
-        for (Operation operation : List.of(getOperation, postOperation)) {
-            List<Parameter> parameters = operation.getParameters();
-            assertNotNull(parameters, "Operation parameters should not be null");
+        // Assert - "/api/v1/customer" path should have X-API-KEY
+        for (Operation op : List.of(customerGetOp, customerPostOp)) {
+            List<Parameter> params = op.getParameters();
+            assertNotNull(params, "Parameters should not be null for customer path");
+            assertTrue(params.stream().anyMatch(p -> "X-API-KEY".equals(p.getName())),
+                    "X-API-KEY should be present for customer path");
+        }
 
-            boolean hasApiKey = parameters.stream()
-                    .anyMatch(p -> "X-API-KEY".equals(p.getName()));
-
-            assertTrue(hasApiKey, "X-API-KEY header should be present in operation");
+        // Assert - "/api/v1/admin" path should NOT have X-API-KEY
+        for (Operation op : List.of(otherGetOp, otherPostOp)) {
+            List<Parameter> params = op.getParameters();
+            if (params != null) {
+                assertTrue(params.stream().noneMatch(p -> "X-API-KEY".equals(p.getName())),
+                        "X-API-KEY should NOT be present for non-customer path");
+            }
         }
     }
 }

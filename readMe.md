@@ -47,7 +47,7 @@ To build the project:
 To run the project locally:
 > mvn spring-boot:run
 
-API Usage:
+Customer API Usage:
 ----------
 All requests must include the `X-RETAILER` header (e.g., `X-RETAILER: RETAILER_A`).
 
