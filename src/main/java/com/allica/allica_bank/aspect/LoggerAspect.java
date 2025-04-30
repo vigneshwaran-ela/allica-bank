@@ -28,13 +28,13 @@ public class LoggerAspect {
 		long start = System.currentTimeMillis();
 		String methodName = joinPoint.getSignature().toShortString();
 		
-		logger.info("Trace Id: {} Entering into method : {}", MDC.get("traceId"), methodName);
+		logger.info("Entering into method : {}",  methodName);
 		
 		Object result = joinPoint.proceed();
 		
 		long end = System.currentTimeMillis();
 		
-		logger.info("Trace Id: {} Exiting from method: {} and total time taken for this in {}ms", MDC.get("traceId"), methodName, (end-start));
+		logger.info("Exiting from method: {} and total time taken for this in {}ms", methodName, (end-start));
 		
 		return result;
 	}

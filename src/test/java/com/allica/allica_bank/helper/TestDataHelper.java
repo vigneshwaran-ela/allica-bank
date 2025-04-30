@@ -3,6 +3,9 @@ package com.allica.allica_bank.helper;
 import com.allica.allica_bank.entity.Customer;
 import com.allica.allica_bank.entity.Retailer;
 
+/**
+ * Utility class to create test data for unit and integration tests.
+ */
 public class TestDataHelper {
 
     /**

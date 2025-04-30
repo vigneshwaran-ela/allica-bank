@@ -21,6 +21,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+/**
+ * Validator to ensure login name is unique per retailer.
+ */
 @Component
 public class LoginNameValidator implements ConstraintValidator<UniqueLoginName, String> {
 
@@ -40,7 +43,7 @@ public class LoginNameValidator implements ConstraintValidator<UniqueLoginName, 
 		if (request != null) {
 			String retailerName = request.getHeader("X-RETAILER");
 
-			Optional<Retailer> retailer = this.retailerRepository.findByRetailType(RetailerType.fromName(retailerName));
+			Optional<Retailer> retailer = this.retailerRepository.findByType(RetailerType.fromName(retailerName));
 
 			Optional<Customer> customer = this.customerRepository.findByRetailerIdAndLoginName(retailer.get().getId(),
 					loginName);

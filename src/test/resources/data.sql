@@ -10,3 +10,13 @@ INSERT INTO retailer ( name, type, api_key) VALUES ( 'Walmart', 'WALMART', '$2a$
 
 INSERT INTO admin_login (user_name, password) VALUES 
 ('ups_admin', '$2a$10$sklgrKYOReRrH/w16DZqH.BP/S3Uq8nyoryK0tKcWGUX9VbDX4.TS'); -- original password: password123
+
+
+--INSERT INTO customer (login_name, first_name, last_name, dob, retailer_id)
+--VALUES ('john_doe1', 'John', 'Doe', '1990-01-15', 100);
+
+--INSERT INTO customer (login_name, first_name, last_name, dob, retailer_id)
+--VALUES ('jane_smith2', 'Jane', 'Smith', '1985-06-23', 2);
+
+--INSERT INTO customer (login_name, first_name, last_name, dob, retailer_id)
+--VALUES ('alice_wong3', 'Alice', 'Wong', '1992-11-05', 3);

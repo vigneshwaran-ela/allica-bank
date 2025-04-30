@@ -19,6 +19,9 @@ import com.allica.allica_bank.model.customer.CustomerResponseDTO;
 import com.allica.allica_bank.repository.CustomerRepository;
 import com.allica.allica_bank.repository.RetailerRepository;
 
+/**
+ * Integration tests for {@link CustomerService}.
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -35,18 +38,24 @@ class CustomerServiceIntegrationTest {
 
     private Retailer testRetailer;
 
+    /**
+     * Sets up a retailer before each test case and clears repositories.
+     */
     @BeforeEach
     void setup() {
         customerRepository.deleteAll();
         retailerRepository.deleteAll();
 
         testRetailer = new Retailer();
-        testRetailer.setRetailType(RetailerType.AMAZON);  // Ensure this matches your enum
+        testRetailer.setType(RetailerType.AMAZON);
         testRetailer.setName("Test Retailer");
         testRetailer.setApiKey(new BCryptPasswordEncoder().encode("password"));
         testRetailer = retailerRepository.save(testRetailer);
     }
 
+    /**
+     * Helper method to create a sample customer request DTO.
+     */
     private CustomerRequestDTO buildCustomerRequestDTO() {
         CustomerRequestDTO dto = new CustomerRequestDTO();
         dto.setFirstName("Alice");
@@ -56,6 +65,9 @@ class CustomerServiceIntegrationTest {
         return dto;
     }
 
+    /**
+     * Test creating a customer should persist successfully.
+     */
     @Test
     void createCustomer_ShouldSucceed() {
         CustomerRequestDTO request = buildCustomerRequestDTO();
@@ -67,12 +79,14 @@ class CustomerServiceIntegrationTest {
 
         Customer saved = customerRepository.findById(response.getId()).orElse(null);
         assertThat(saved).isNotNull();
-        assertThat(saved.getRetailer().getRetailType()).isEqualTo(RetailerType.AMAZON);
+        assertThat(saved.getRetailer().getType()).isEqualTo(RetailerType.AMAZON);
     }
 
+    /**
+     * Test retrieving a customer by ID should return the correct customer.
+     */
     @Test
     void getCustomer_ShouldReturnCorrectCustomer() {
-        // Create first
         CustomerRequestDTO request = buildCustomerRequestDTO();
         CustomerResponseDTO created = customerService.createCustomer(request, "AMAZON");
 
@@ -82,6 +96,9 @@ class CustomerServiceIntegrationTest {
         assertThat(fetched.getLoginName()).isEqualTo("alice.smith");
     }
 
+    /**
+     * Test retrieving a non-existent customer should throw an exception.
+     */
     @Test
     void getCustomer_ShouldThrowIfNotFound() {
         assertThatThrownBy(() -> customerService.getCustomer(999L, "AMAZON"))
@@ -89,6 +106,9 @@ class CustomerServiceIntegrationTest {
                 .hasMessageContaining("Customer Information is not found");
     }
 
+    /**
+     * Test updating a customer should update the fields correctly.
+     */
     @Test
     void updateCustomer_ShouldUpdateFields() {
         CustomerRequestDTO request = buildCustomerRequestDTO();
@@ -106,6 +126,9 @@ class CustomerServiceIntegrationTest {
         assertThat(updated.getLoginName()).isEqualTo("bob.jones");
     }
 
+    /**
+     * Test deleting a customer should remove it from the repository.
+     */
     @Test
     void deleteCustomer_ShouldRemoveEntity() {
         CustomerRequestDTO request = buildCustomerRequestDTO();
@@ -116,6 +139,9 @@ class CustomerServiceIntegrationTest {
         assertThat(customerRepository.findById(created.getId())).isEmpty();
     }
 
+    /**
+     * Test deleting a non-existent customer should throw an exception.
+     */
     @Test
     void deleteCustomer_ShouldThrowIfCustomerDoesNotExist() {
         assertThatThrownBy(() -> customerService.deleteCustomer(1000L, "AMAZON"))

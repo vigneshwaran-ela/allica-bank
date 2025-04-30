@@ -11,6 +11,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Entity representing a retailer in the system.
+ * Maps to the `retailer` table in the database.
+ */
 @Entity
 @Table(name = "retailer")
 public class Retailer {
@@ -24,7 +28,7 @@ public class Retailer {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false, unique = true)
-	private RetailerType retailType;
+	private RetailerType type;
 
 	@Column(name = "api_key", nullable = false, unique = true)
 	private String apiKey;
@@ -53,12 +57,12 @@ public class Retailer {
 		this.apiKey = apiKey;
 	}
 
-	public RetailerType getRetailType() {
-		return retailType;
+	public RetailerType getType() {
+		return this.type;
 	}
 
-	public void setRetailType(RetailerType retailType) {
-		this.retailType = retailType;
+	public void setType(RetailerType type) {
+		this.type = type;
 	}
 
 }

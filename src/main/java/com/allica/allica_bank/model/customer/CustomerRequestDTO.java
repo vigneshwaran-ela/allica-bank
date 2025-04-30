@@ -4,6 +4,7 @@ import com.allica.allica_bank.annotation.UniqueLoginName;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 /**
  * DTO for customer creation and update operations.
@@ -18,6 +19,7 @@ public class CustomerRequestDTO {
 	
 	@NotNull(message = "DOB must not be null")
 	@NotBlank(message = "DOB must not be blank")
+    @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}", message = "DOB must be in format yyyy-MM-dd")
 	private String dob;
 	
 	@UniqueLoginName

@@ -21,6 +21,10 @@ import com.allica.allica_bank.service.CustomerService;
 
 import jakarta.validation.Valid;
 
+/**
+ * Controller that handles customer-related operations for specific retailers.
+ * Endpoints include create, retrieve, update, and delete functionality.
+ */
 @RestController
 @RequestMapping("/api/v1/customer")
 public class CustomerController {
@@ -30,9 +34,13 @@ public class CustomerController {
 	@Autowired
 	private CustomerService customerService;
 
-	/**
-	 * Create a new customer
-	 */
+    /**
+     * Create a new customer for the specified retailer.
+     *
+     * @param customerRequestDTO The customer details to create.
+     * @param retailerName The name of the retailer (from request header).
+     * @return The created customer with a 201 status.
+     */
 	@PostMapping
 	public ResponseEntity<CustomerResponseDTO> createCustomer(@RequestBody @Valid CustomerRequestDTO customerRequestDTO,
 			@RequestHeader("X-RETAILER") String retailerName) {
@@ -41,9 +49,13 @@ public class CustomerController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
-	/**
-	 * Get a customer by ID
-	 */
+    /**
+     * Retrieve a customer by ID under a specific retailer.
+     *
+     * @param id The customer ID.
+     * @param retailerName The name of the retailer (from request header).
+     * @return The customer information if found.
+     */
 	@GetMapping("/{id}")
 	public ResponseEntity<CustomerResponseDTO> getCustomer(@PathVariable Long id,
 			@RequestHeader("X-RETAILER") String retailerName) {
@@ -52,9 +64,14 @@ public class CustomerController {
 		return ResponseEntity.ok(customer);
 	}
 
-	/**
-	 * Update a customer
-	 */
+    /**
+     * Update an existing customer by ID for the given retailer.
+     *
+     * @param id The customer ID.
+     * @param customerRequestDTO The updated customer information.
+     * @param retailerName The name of the retailer (from request header).
+     * @return The updated customer details.
+     */
 	@PutMapping("/{id}")
 	public ResponseEntity<CustomerResponseDTO> updateCustomer(@PathVariable Long id,
 			@RequestBody @Valid CustomerRequestDTO customerRequestDTO,
@@ -64,9 +81,13 @@ public class CustomerController {
 		return ResponseEntity.ok(updated);
 	}
 
-	/**
-	 * Delete a customer by ID
-	 */  
+    /**
+     * Delete a customer by ID under a given retailer.
+     *
+     * @param id The customer ID.
+     * @param retailerName The name of the retailer (from request header).
+     * @return A success message upon deletion.
+     */ 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteCustomer(@PathVariable Long id,
 			@RequestHeader("X-RETAILER") String retailerName) {

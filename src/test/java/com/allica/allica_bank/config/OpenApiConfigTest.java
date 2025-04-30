@@ -13,15 +13,21 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.parameters.Parameter;
 
+/**
+ * Unit tests for {@link OpenApiConfig}, validating OpenAPI custom header behavior.
+ */
 class OpenApiConfigTest {
 
+    /**
+     * Tests that the {@code globalHeaderCustomizer} method adds the {@code X-API-KEY}
+     * header to all HTTP operations in the OpenAPI documentation.
+     */
     @Test
-    void testGlobalHeaderCustomizer_AddsApiKeyHeader() {
+    void globalHeaderCustomizer_whenApplied_shouldAddApiKeyHeaderToAllOperations() {
         // Arrange
         OpenApiConfig config = new OpenApiConfig();
         OpenAPI openAPI = new OpenAPI();
 
-        // Mock OpenAPI path structure
         Operation getOperation = new Operation();
         Operation postOperation = new Operation();
 

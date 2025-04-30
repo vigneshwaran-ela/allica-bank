@@ -13,14 +13,21 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+/**
+ * Global exception handler for the application.
+ * Catches and formats common exceptions for consistent error responses.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 	
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Handles all uncaught runtime exceptions.
+     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
-        logger.error("Trace Id: {} - Runtime exception occurred: {}", MDC.get("traceId"), ex.getMessage());
+        logger.error("Runtime exception occurred: {}", ex.getMessage());
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -30,9 +37,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     
+    /**
+     * Handles validation failures for @Valid annotated request bodies.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logger.warn("Trace Id: {} - Validation failed: {}", MDC.get("traceId"), ex.getMessage());
+        logger.warn("Validation failed: {}", ex.getMessage());
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
             fieldErrors.put(error.getField(), error.getDefaultMessage())

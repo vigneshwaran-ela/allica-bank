@@ -21,6 +21,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Filter that performs API key authentication for requests targeting /api/v1/customer endpoints.
+ * It extracts the API key and retailer name from the headers, verifies them, and sets up trace logging.
+ */
 @Component
 public class ApiAuthKeyFilter extends OncePerRequestFilter {
 	
@@ -34,34 +38,40 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
 
+    /**
+     * Filters incoming HTTP requests and validates the API key for customer-related endpoints.
+     */
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-
-		String apiKey = request.getHeader(API_KEY_HEADER);
-		String retailer = request.getHeader(RETAILER_HEADER);
 		
 		try {
 			String traceId = UUID.randomUUID().toString();
 			MDC.put("traceId", traceId);
-			logger.info("Trace Id is generated for the request..");
 	        String path = request.getRequestURI();
+	        if(!path.startsWith("/h2-console"))
+	        	logger.info("Processing for request to path: {}", path);
+            // Skip validation for non-customer APIs
 	        if (!path.startsWith("/api/v1/customer")) {
 	            filterChain.doFilter(request, response); // skip API key check
 	            return;
 	        }
 
+			String apiKey = request.getHeader(API_KEY_HEADER);
+			String retailer = request.getHeader(RETAILER_HEADER);
 
 			if (apiKey == null || apiKey.isBlank()) {
+                logger.warn("Missing Retailer header in request");
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				response.getWriter().write("Missing API Key");
 				return;
 			}
 
 			// Find retailer with matching API key
-			Optional<Retailer> optionalRetailer = retailerRepository.findByRetailType(RetailerType.fromName(retailer));
+			Optional<Retailer> optionalRetailer = retailerRepository.findByType(RetailerType.fromName(retailer));
 			
 			if(optionalRetailer.isEmpty()) {
+                logger.warn("Invalid retailer name: {}", retailer);
 	            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 	            response.getWriter().write("Invalid Retailer name or Reatiler data not present");
 	            return;
@@ -69,7 +79,7 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 			
 	        Retailer retailerObj = optionalRetailer.get();
 	        if (!passwordEncoder.matches(apiKey, retailerObj.getApiKey())) {
-				logger.warn("Trace Id: {} - API key does not match for retailer '{}'", traceId, retailer);
+				logger.warn("API key does not match for retailer '{}'", retailer);
 	            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 	            response.getWriter().write("Invalid API Key");
 	            return;
@@ -77,7 +87,7 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 
 			filterChain.doFilter(request, response);
 		} catch (Exception e) {
-			logger.error("Error while processing authentication for api key for retailer : {}", retailer, e);
+			logger.error("Error while processing authentication for api key and retailer ", e);
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			response.getWriter().write("Invalid Retailer name or API Key");
 			return;

@@ -1,12 +1,6 @@
 package com.allica.allica_bank.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
@@ -28,6 +22,9 @@ import com.allica.allica_bank.model.retailer.RetailerResponseDTO;
 import com.allica.allica_bank.repository.CustomerRepository;
 import com.allica.allica_bank.repository.RetailerRepository;
 
+/**
+ * Integration tests for {@link AdminRetailerService}.
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -48,105 +45,131 @@ class AdminRetailerServiceTest {
 
     private static Long createdRetailerId;
 
+    /**
+     * Helper method to build a {@link RetailerRequestDTO}.
+     */
+    private RetailerRequestDTO buildRetailerDTO(String name, String apiKey, RetailerType type) {
+        RetailerRequestDTO dto = new RetailerRequestDTO();
+        dto.setName(name);
+        dto.setApiKey(apiKey);
+        dto.setType(type);
+        return dto;
+    }
+
+    /**
+     * Test creating a retailer successfully.
+     */
     @Test
     @Order(1)
-    void testCreateRetailer() {
-        // Create a new retailer
-        RetailerRequestDTO dto = new RetailerRequestDTO();
-        dto.setName("TestRetailer");
-        dto.setApiKey("SECRET123");
-        dto.setRetailType(RetailerType.ZEPTO);
-
+    void createRetailer_ShouldSucceed() {
+        RetailerRequestDTO dto = buildRetailerDTO("TestRetailer", "SECRET123", RetailerType.ZEPTO);
         RetailerResponseDTO response = adminRetailerService.createRetailer(dto);
 
         assertNotNull(response.getId());
         assertEquals("TestRetailer", response.getName());
 
-        createdRetailerId = response.getId(); // store for later tests
+        createdRetailerId = response.getId();
     }
-    
+
+    /**
+     * Test creating a retailer that already exists should fail.
+     */
     @Test
     @Order(2)
-    void testRetailer_Exist() {
-        // Create a new retailer
-        RetailerRequestDTO dto = new RetailerRequestDTO();
-        dto.setName("TestRetailer");
-        dto.setApiKey("SECRET123");
-        dto.setRetailType(RetailerType.ZEPTO);
-
-        // When + Then: expect RuntimeException
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            adminRetailerService.createRetailer(dto);
-        });
-
+    void createRetailer_ShouldFailIfAlreadyExists() {
+        RetailerRequestDTO dto = buildRetailerDTO("TestRetailer", "SECRET123", RetailerType.ZEPTO);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> adminRetailerService.createRetailer(dto));
         assertTrue(ex.getMessage().contains("Retailer is already present"));
     }
-    
-    
 
+    /**
+     * Test retrieving retailer by ID.
+     */
     @Test
-    @Order(2)
-    void testGetRetailerById() {
+    @Order(3)
+    void getRetailerById_ShouldReturnRetailer() {
         RetailerResponseDTO retailer = adminRetailerService.getRetailerById(createdRetailerId);
         assertEquals("TestRetailer", retailer.getName());
     }
 
+    /**
+     * Test retrieving all retailers.
+     */
     @Test
-    @Order(3)
-    void testGetAllRetailers() {
+    @Order(4)
+    void getAllRetailers_ShouldReturnAtLeastOne() {
         List<RetailerResponseDTO> allRetailers = adminRetailerService.getAllRetailers();
         assertTrue(allRetailers.size() >= 1);
     }
 
+    /**
+     * Test updating an existing retailer.
+     */
     @Test
-    @Order(4)
-    void testUpdateRetailer() {
-        RetailerRequestDTO updateDTO = new RetailerRequestDTO();
-        updateDTO.setName("UpdatedRetailer");
-        updateDTO.setApiKey("NEW_SECRET");
-        updateDTO.setRetailType(RetailerType.FLIPKART);
-
+    @Order(5)
+    void updateRetailer_ShouldUpdateFields() {
+        RetailerRequestDTO updateDTO = buildRetailerDTO("UpdatedRetailer", "NEW_SECRET", RetailerType.FLIPKART);
         RetailerResponseDTO updated = adminRetailerService.updateRetailer(createdRetailerId, updateDTO);
         assertEquals("UpdatedRetailer", updated.getName());
 
-        // Verify the API key is encrypted
         Retailer entity = retailerRepository.findById(createdRetailerId).orElseThrow();
         assertNotEquals("NEW_SECRET", entity.getApiKey());
         assertTrue(passwordEncoder.matches("NEW_SECRET", entity.getApiKey()));
     }
 
+    /**
+     * Test deleting a retailer with no linked customers should succeed.
+     */
     @Test
-    @Order(5)
-    void testDeleteRetailerSuccess() {
-        // Ensure no customer is referencing this retailer
+    @Order(6)
+    void deleteRetailer_ShouldSucceedWhenNoCustomersLinked() {
         assertTrue(customerRepository.findByRetailerId(createdRetailerId).isEmpty());
-
-        // Attempt deletion
         assertDoesNotThrow(() -> adminRetailerService.deleteRetailer(createdRetailerId));
-
-        // Ensure it is deleted
         assertFalse(retailerRepository.findById(createdRetailerId).isPresent());
     }
 
+    /**
+     * Test deleting a retailer that has linked customers should fail.
+     */
     @Test
-    @Order(6)
-    void testDeleteRetailerFailsWhenCustomerExists() {
-        // Create a retailer and link a customer manually for test (setup needs to exist)
+    @Order(7)
+    void deleteRetailer_ShouldFailWhenCustomersExist() {
         Retailer retailer = new Retailer();
         retailer.setName("LinkedRetailer");
         retailer.setApiKey(passwordEncoder.encode("KEY"));
-        retailer.setRetailType(RetailerType.AMAZON);
+        retailer.setType(RetailerType.AMAZON);
         Retailer saved = retailerRepository.save(retailer);
 
         Long linkedRetailerId = saved.getId();
-
-        // Create a customer linked to this retailer using direct SQL or repository
         customerRepository.save(TestDataHelper.createCustomer("linked_user", linkedRetailerId));
 
-        // Expect delete to fail
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> adminRetailerService.deleteRetailer(linkedRetailerId));
-
         assertTrue(ex.getMessage().contains("customer records"));
+    }
+
+    /**
+     * Test retrieving a non-existent retailer by ID should throw.
+     */
+    @Test
+    @Order(8)
+    void getRetailerById_ShouldThrowIfNotFound() {
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            adminRetailerService.getRetailerById(999999L)
+        );
+        assertTrue(ex.getMessage().toLowerCase().contains("not found"));
+    }
+
+    /**
+     * Test updating a non-existent retailer should throw.
+     */
+    @Test
+    @Order(9)
+    void updateRetailer_ShouldThrowIfNotFound() {
+        RetailerRequestDTO dto = buildRetailerDTO("GhostRetailer", "ghost", RetailerType.AMAZON);
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            adminRetailerService.updateRetailer(999999L, dto)
+        );
+        assertTrue(ex.getMessage().toLowerCase().contains("not found"));
     }
 }

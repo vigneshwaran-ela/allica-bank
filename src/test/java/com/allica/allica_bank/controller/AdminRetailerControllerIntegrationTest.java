@@ -29,6 +29,9 @@ import com.allica.allica_bank.model.retailer.RetailerRequestDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Integration tests for {@link AdminRetailerController}.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -48,35 +51,44 @@ class AdminRetailerControllerIntegrationTest {
     private final String ADMIN_USERNAME = "ups_admin";
     private final String ADMIN_PASSWORD = "password123";
 
+    /**
+     * Tests retrieval of all retailers, expecting at least 3 to be present.
+     */
     @Test
     @Order(1)
-    void testGetAllRetailers() throws Exception {
-    	MvcResult result = mockMvc.perform(get(BASE_URL)
+    void getAllRetailers_shouldReturnListWithMinimumSize() throws Exception {
+        MvcResult result = mockMvc.perform(get(BASE_URL)
                         .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()", greaterThanOrEqualTo(3)))
                 .andReturn();
-        
+
         String responseBody = result.getResponse().getContentAsString();
         System.out.println("Response from GET /admin/retailer: " + responseBody);
     }
 
+    /**
+     * Tests retrieval of retailer by ID (105), expecting the name to be "Walmart".
+     */
     @Test
     @Order(2)
-    void testGetRetailerById() throws Exception {
+    void getRetailerById_withValidId_shouldReturnRetailerDetails() throws Exception {
         mockMvc.perform(get(BASE_URL + "/105")
                         .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Walmart"));
     }
 
+    /**
+     * Tests creation of a new retailer with the name "Target".
+     */
     @Test
     @Order(3)
-    void testCreateRetailer() throws Exception {
+    void createRetailer_withValidPayload_shouldPersistAndReturnRetailer() throws Exception {
         RetailerRequestDTO dto = new RetailerRequestDTO();
         dto.setName("Target");
         dto.setApiKey("APIKEY_TARGET_999");
-        dto.setRetailType(RetailerType.ZEPTO);
+        dto.setType(RetailerType.ZEPTO);
 
         MvcResult result = mockMvc.perform(post(BASE_URL)
                         .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
@@ -88,16 +100,19 @@ class AdminRetailerControllerIntegrationTest {
 
         String responseBody = result.getResponse().getContentAsString();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
-        createdRetailerId = jsonNode.get("id").asLong(); // capture ID for delete test
+        createdRetailerId = jsonNode.get("id").asLong();
     }
 
+    /**
+     * Tests updating the retailer created in the previous step.
+     */
     @Test
     @Order(4)
-    void testUpdateRetailer() throws Exception {
+    void updateRetailer_withValidPayload_shouldModifyRetailerData() throws Exception {
         RetailerRequestDTO dto = new RetailerRequestDTO();
         dto.setName("Target - Updated");
         dto.setApiKey("NEW_APIKEY_TARGET");
-        dto.setRetailType(RetailerType.FLIPKART);
+        dto.setType(RetailerType.FLIPKART);
 
         mockMvc.perform(put(BASE_URL + "/" + createdRetailerId)
                         .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD))
@@ -107,18 +122,24 @@ class AdminRetailerControllerIntegrationTest {
                 .andExpect(jsonPath("$.name").value("Target - Updated"));
     }
 
+    /**
+     * Tests deletion of the previously created retailer.
+     */
     @Test
     @Order(5)
-    void testDeleteRetailer_Success() throws Exception {
+    void deleteRetailer_withValidId_shouldRemoveRetailer() throws Exception {
         mockMvc.perform(delete(BASE_URL + "/" + createdRetailerId)
                         .with(httpBasic(ADMIN_USERNAME, ADMIN_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Retailer deleted successfully")));
     }
-    
+
+    /**
+     * Tests behavior when using a non-existent admin login.
+     */
     @Test
     @Order(6)
-    void testNoAdminLoginFound() throws Exception {
+    void getRetailerById_withInvalidAdminCredentials_shouldReturnUnauthorized() throws Exception {
         mockMvc.perform(get(BASE_URL + "/105")
                         .with(httpBasic("no_login_found", ADMIN_PASSWORD)))
                 .andExpect(status().isUnauthorized());

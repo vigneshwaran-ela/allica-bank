@@ -7,6 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Entity representing an admin login credential stored in the `admin_login` table.
+ */
 @Entity
 @Table(name = "admin_login")
 public class AdminLogin {

@@ -38,11 +38,11 @@ public class RetailerRequestDTO {
 		this.apiKey = apiKey;
 	}
 
-	public RetailerType getRetailType() {
+	public RetailerType getType() {
 		return type;
 	}
 
-	public void setRetailType(RetailerType type) {
+	public void setType(RetailerType type) {
 		this.type = type;
 	}
 }

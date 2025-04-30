@@ -71,6 +71,7 @@ Create Customer:
 curl -X POST http://localhost:8080/api/v1/customer \
   -H "Content-Type: application/json" \
   -H "X-RETAILER: RETAILER_A" \
+  -H "X-API-KEY: password" \
   -d '{"firstName":"John","lastName":"Doe","loginName":"jdoe","dob":"1990-01-01"}'
 
 API Documentation:
@@ -84,6 +85,29 @@ Configuration Notes:
 - Retailers are predefined and retrieved using `RetailerType.fromName(String name)`.
 - Customer uniqueness is validated against retailer + login name combination.
 - Application logs customer actions with traceable logs using SLF4J + MDC.
+
+Customer API Working Retailer and API-Key:
+---------------------
+[
+{
+  "name" : "AMAZON",
+  "apiKey" : "APIKEY_AMAZON_123"
+},
+{
+  "name" : "FLIPKART",
+  "apiKey" : "APIKEY_FLIPKART_456"
+},
+{
+  "name" : "WALMART",
+  "apiKey" : "APIKEY_WALMART_789"
+}
+]
+
+Retailer API Working basic auth credentails:
+---------------------
+"userName" : "ups_admin"
+"password" : "password123"
+
 
 Contact:
 --------
