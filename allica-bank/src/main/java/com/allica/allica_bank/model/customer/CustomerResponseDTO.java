@@ -9,14 +9,26 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  */
 @JsonInclude(value = Include.NON_NULL)
 public class CustomerResponseDTO {
+	
+	private Long id;
 
 	private String firstName;
 	
 	private String lastName;
 	
+	private String loginName;
+	
 	private String dob;
 	
 	private Long retailerId;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 
 	public String getFirstName() {
 		return firstName;
@@ -48,5 +60,13 @@ public class CustomerResponseDTO {
 
 	public void setRetailerId(Long retailerId) {
 		this.retailerId = retailerId;
+	}
+
+	public String getLoginName() {
+		return loginName;
+	}
+
+	public void setLoginName(String loginName) {
+		this.loginName = loginName;
 	}
 }

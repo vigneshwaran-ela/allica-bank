@@ -53,8 +53,8 @@ public class AdminRetailerService {
     	Optional<Retailer> retailerOptional = this.retailerRepository.findByName(dto.getName());
     	
     	if(retailerOptional.isPresent()) {
-    		logger.warn("Reatiler is already present, please try with some other retailer name");
-    		throw new RuntimeException("Reatiler is already present, please try something else " + dto.getName());
+    		logger.warn("Retailer is already present, please try with some other retailer name");
+    		throw new RuntimeException("Retailer is already present, please try something else " + dto.getName());
     	}
         Retailer retailer = new Retailer();
         BeanUtils.copyProperties(dto, retailer);

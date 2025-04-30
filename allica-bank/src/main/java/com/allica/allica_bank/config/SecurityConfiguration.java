@@ -54,7 +54,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/api/v1/customer/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/api/v1/retailer/**").authenticated()
+                .requestMatchers("/api/v1/admin/**").authenticated()
                 .anyRequest().permitAll()
             )
             .httpBasic(Customizer.withDefaults()); // Keeps HTTP Basic for /api/secure/**

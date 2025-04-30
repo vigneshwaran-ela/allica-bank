@@ -37,6 +37,10 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
+
+		String apiKey = request.getHeader(API_KEY_HEADER);
+		String retailer = request.getHeader(RETAILER_HEADER);
+		
 		try {
 			String traceId = UUID.randomUUID().toString();
 			MDC.put("traceId", traceId);
@@ -47,8 +51,6 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 	            return;
 	        }
 
-			String apiKey = request.getHeader(API_KEY_HEADER);
-			String retailer = request.getHeader(RETAILER_HEADER);
 
 			if (apiKey == null || apiKey.isBlank()) {
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -58,12 +60,11 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 
 			// Find retailer with matching API key
 			Optional<Retailer> optionalRetailer = retailerRepository.findByRetailType(RetailerType.fromName(retailer));
-
-			if (optionalRetailer.isEmpty()) {
-				logger.warn("Trace Id: {} - Retailer not found for '{}'", traceId, retailer);
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				response.getWriter().write("Invalid API Key");
-				return;
+			
+			if(optionalRetailer.isEmpty()) {
+	            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+	            response.getWriter().write("Invalid Retailer name or Reatiler data not present");
+	            return;
 			}
 			
 	        Retailer retailerObj = optionalRetailer.get();
@@ -75,6 +76,11 @@ public class ApiAuthKeyFilter extends OncePerRequestFilter {
 	        }
 
 			filterChain.doFilter(request, response);
+		} catch (Exception e) {
+			logger.error("Error while processing authentication for api key for retailer : {}", retailer, e);
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.getWriter().write("Invalid Retailer name or API Key");
+			return;
 		} finally {
 			MDC.clear();  // Important to prevent leakage across threads
 		}

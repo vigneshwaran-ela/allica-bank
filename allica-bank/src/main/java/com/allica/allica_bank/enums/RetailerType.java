@@ -9,7 +9,8 @@ public enum RetailerType {
 
 	AMAZON("Amazon"),
 	FLIPKART("Flipkart"),
-	WALMART("Walmart");
+	WALMART("Walmart"),
+	ZEPTO("Zepto");
 	
 	private String name;
 	
